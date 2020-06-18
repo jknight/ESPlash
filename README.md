@@ -36,7 +36,7 @@ ValveN /
 
 ## Web server methods
 
-| **Endpoint**    | **Purpose                               |
+| **Endpoint**    | **Purpose**                             |
 |-----------------|-----------------------------------------|
 | index.html      | Serves up main index page               |
 | /stats          | returns temp/humidity/time/etc          |
