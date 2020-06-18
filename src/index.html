@@ -1,0 +1,292 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Irrigation Control System</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta charset="UTF-8" />
+
+        <link rel="stylesheet" 
+              href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"  />
+        <style>
+html {
+    font-family: Arial;
+    display: inline-block;
+    text-align: center;
+}
+
+        h2 {
+            font-size: 2.4rem;
+        }
+
+        p {
+            font-size: 2.2rem;
+        }
+
+        body {
+            max-width: 600px;
+            margin: 0px auto;
+            padding-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        input {
+            border: 1px solid #ccc;
+            color: #888;
+            margin: 0.5em;
+            vertical-align: middle;
+            outline: 0;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            width: calc(100% - 3em - 2px);
+            font-family: sans-serif;
+        }
+
+        #output {
+            background: lightyellow;
+            padding: 10px;
+            border: 1px solid tan;
+            margin: 0 0 10px 0;
+        }
+
+        .switch {
+            vertical-align: middle;
+            display: inline-block;
+            position: relative;
+            width: 120px;
+            height: 47px
+        }
+
+        .switch input {
+            display: none
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 30px;
+            width: 52px;
+            left: 8px;
+            bottom: 8px;
+            background-color: #fff;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 68px
+        }
+
+        .slider2 {
+            -webkit-appearance: none;
+            margin: 14px;
+            width: 300px;
+            height: 20px;
+            background: #ccc;
+            outline: none;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider2::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            background: #2f4468;
+            cursor: pointer;
+        }
+
+        .slider2::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            background: #2f4468;
+            cursor: pointer;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(52px);
+            -ms-transform: translateX(52px);
+            transform: translateX(52px)
+        }
+
+        .units {
+            font-size: 1.2rem;
+        }
+
+        .dht-labels {
+            font-size: 1.5rem;
+            vertical-align: middle;
+            padding-bottom: 15px;
+        }
+
+        </style>
+    </head>
+
+    <body>
+        <form id="form1" action="none">
+
+            <img src="logo" alt="logo"/>
+            <h2>FabFarm fabESPlash</h2>
+
+            <!--i class="fas fa-clock"/-->
+
+            <span class="dht-labels">Farm Time</span>
+            <br/>
+            <span id="farmtimenow">%FARMTIMENOW%</span>
+            <hr/>
+
+            <p>Zone1</p>
+
+            <table class="datetime-tool">
+                <tr>
+                    <td><label for="time">Time of cycle start:</label></td>
+                    <td><input type="time" id="appt" name="appt" value="08:30" onChange="update();"/></td>
+                    <td><input type="button" value="Submit start cycle time" onClick="update();"/></td>
+                </tr>
+            </table>
+
+            <div>
+                <span id="timerValue">%TIMERVALUE%</span>
+                <span class="">
+                    <input type="range" onchange="update()" id="timerSlider" min="0" max="60" value="%TIMERVALUE%" step="1" class="slider2">
+                </span>
+                %BUTTONPLACEHOLDER%
+            </div>
+
+            <hr/>
+            <p>
+            <span class="fas fa-thermometer-half">&nbsp;</span>
+            <span class="dht-labels">Temperature</span>
+            <span id="temperature">%TEMPERATURE%</span>
+            <sup class="units">&deg;C</sup>
+            </p>
+            <hr/>
+            <span class="fas fa-tint">&nbsp;</span>
+            <span class="dht-labels">Humidity</span>
+            <span id="humidity">%HUMIDITY%</span>
+            <sup class="units">%</sup>
+
+        </form>
+
+        <script language="javascript">
+            /* this function gets invoked  on checkBox checked even.
+            The checkbox itself is generated (see fabfarm_irrigation.ino)
+
+
+*/
+
+// Call back to the server to get settings
+function init() {
+
+    var x1 = new XMLHttpRequest();
+    x1.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            // returns json of settings
+            console.log(this.responseText);
+            //document.getElementById("").innerHTML = this.responseText;
+        }
+    };
+    x1.open("GET", "settings", true);
+    x1.send();
+
+
+
+
+}
+
+
+function update() { 
+
+    // TODO: get additional form fields to send to server
+    // NOTE: it's probably easier to to get *all* form fields here rather then just some one bit
+    var elements = document.getElementById("form1").elements;
+    var json = new Object();
+    json.settings = [];
+    //console.log("json", json);
+    for(var i = 0; i < elements.length; i++) {
+        if(elements[i].id) {
+            json.settings.push ( [ elements[i].id, elements[i].value ] );
+        }
+    }
+    console.log(elements);
+    console.log(JSON.stringify(json));
+
+    /*
+var sliderValue = document.getElementById("timerSlider").value;
+    document.getElementById("timerValue").innerHTML = sliderValue;
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/slider?value=" + sliderValue, true);
+    xhr.send();
+
+// after the checkbox is checked, we retrieve the slider value
+                        var sliderValue = document.getElementById("timerSlider").value;
+
+// initialize a http request ... depending on IF the checkbox is checked
+                var xhr = new XMLHttpRequest();
+                var state = element.checked ? "1" : "0"; // if checked then state will be 1 otherwise state is 0
+    //var url = "/update?relay=" + element.id + "&state=" + state + "&sliderValue=" + sliderValue;
+                var url = "/udpate?duration1=x&duration2=y ...."
+
+                xhr.open("GET", url, true); // "öpens" the http connection
+                xhr.send();     //  sends the request
+     */
+}
+
+function updateSliderTimer(element) {
+}
+
+// ping the server every 10 seconds to get info 
+setInterval(function() {
+
+    if(true) return; 
+    var x1 = new XMLHttpRequest();
+    x1.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("farmtimenow").innerHTML = this.responseText;
+        }
+    };
+    x1.open("GET", "/farmtimenow", true);
+    x1.send();
+
+    var x2 = new XMLHttpRequest();
+    x2.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("temperature").innerHTML = this.responseText;
+        }
+    };
+    x2.open("GET", "/temperature", true);
+    x2.send();
+
+    var x3 = new XMLHttpRequest();
+    x3.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById("humidity").innerHTML = this.responseText;
+        }
+    };
+    x3.open("GET", "/humidity", true);
+    x3.send();
+
+}, 10000);
+
+init();
+        </script>
+
+
+    </body>
+
+</html>
