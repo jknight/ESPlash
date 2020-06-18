@@ -9,9 +9,11 @@ The http server displays controls for N zones, where each zone has:
 - turn on time
 - turn on duration
 
+```
 Valve1 \
-Valve2  --- Microprocessor <==> Web Interface
+Valve2  --- Microprocessor <==> Web Interface  
 ValveN /
+```
 
 
 | **Web Interface**                 | **Microprocessor** (ESP32)                   |
