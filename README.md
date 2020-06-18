@@ -90,14 +90,16 @@ Settings:
 TODO: it might be better to combine these:
 
 ```json
+
 {
-    "stats: { "temp": 55, "humidity": 68, "time": "20200101 10:20:00" },
+    "stats": { "temp": 55, "humidity": 68, "time": "20200101 10:20:00" },
     "zones": [
         { "name": "zone1", "pin": "1", "start": "00:01:00", "runSeconds": 3000 }, 
         { "name": "zone2", "pin": "2", "start": "00:02:00", "runSeconds": 4000 }, 
         { "name": "zone3", "pin": "3", "start": "00:03:00", "runSeconds": 5000 }
     ]
 }
+
 ```
 
 
