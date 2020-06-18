@@ -1,71 +1,103 @@
-# Fablab Irregation System
+# FabLab Irregation System
 
-HTML <--> JavaScript  <--> C++
+## Design
 
-Need a polling mechanism 
+C++ for a Microprocessor that includes an embedded http server.
+
+The http server displays controls for N zones, where each zone has:
+
+- turn on time
+- turn on duration
+
+Valve1 \
+Valve2  --- Microprocessor <==> Web Interface
+ValveN /
 
 
-| **Web Interface**                     | **Microprocessor** (ESP32)                                           |
-|---------------------------------------|----------------------------------------------------------------------|
-| Set per zone:                         | Receives:                                                            |
-|[ ] start times                        |   [ ] start times                                                    |
-|[ ] duration of cicle, max 1 hour      |   [ ] Duration or cicle                                              |
-|                                       |   [ ] Override button                                                |
-| Displays                              | [ ] Stores info above at SPIFFS (csv ? )                             |
-|[x] time of day                        | logic test:                                                          |
-|[x] Humidity                           |   keep checking:  ({                                    |
-|[x] Temperature                        |       - am I ('zone x') in an On window  ('time + duration') ?
-                                                        Yes: 'be sure' I'm on   
-                                                        No: be sure I'm off
-|[ ] current zone programs stored       |       -wait for override button and break cycle if received          |
-|[ ] override button                    |   wait for override buton and turn on/off anytime                    |  
-|[ ] current zone state  (ON/OFF)       | Updates/sends current situation:                                     |
-|                                       | [x]Time of day;                                                      |
-|                                       | [ ]State of zone (ON/OFF)                                            |
-|                                       | [x]sensor information (humidity/temperature)                         |
-|                                       |                                                                      |
-|                                       |                                                                      |
+| **Web Interface**                 | **Microprocessor** (ESP32)                   |
+|-----------------------------------|----------------------------------------------|
+| Set per zone:                     | Receives:                                    |
+| [ ] start times                   | start times                                  |
+| [ ] duration of cicle, max 1 hour | Duration or cicle                            |
+|                                   | Override button                              |
+| Displays                          |                                              |
+| [x] time of day                   |                                              |
+| [x] Humidity                      |                                              |
+| [x] Temperature                   |                                              |
+| [ ] current zone programs stored  |                                              |
+| [ ] override button               |                                              |
+| [ ] current zone state  (ON/OFF)  | Updates/sends current situation:             |
+|                                   | [x]Time of day;                              |
+|                                   | [ ]State of zone (ON/OFF)                    |
+|                                   | [x]sensor information (humidity/temperature) |
 
-microprocessor
-    - Runs: webserver
-        - /index.html: displays index
-        - /temp.htmml: placeholder
-        - /farmtimenow: returns time
-        - /slider: 
-        - /temperature: returns temp
-        - /humidity: returns humidity
-        - /update: **sets** values
 
-On Startup: 
-- we read from csv file 
-- keep info in memory to check against in loop (is this the window?)
-- we also have to tell the html what settings it should PRE SET
+## Web server methods
 
-Problem: 
-- If the microcontroller loses power, we can lose state. We therefore need a way to persist settings to disk
-- What do we need to save?
-    - N zones and for each zone:
-        - Name
-        - start time (timestamp)
-        - duration of cycle
-        - current state (one off) <-- this can be calculated - if we're between start & stop then should be on !
+| **Endpoint**    | **Purpose                               |
+|-----------------|-----------------------------------------|
+| index.html      | Serves up main index page               |
+| /stats          | returns temp/humidity/time/etc          |
+| /getSettings    | get settings                            |
+| /saveSettings   | save settings                           |
+| /stop?pin={pin} | stop (override) currently running valve |
 
-csv file:
-zone1, 20200101 00:00:00.0000, 1234, 1, 12
-zone2, 20200101 00:00:00.0000, 1234, 1, 16
-zone3, 20200101 00:00:00.0000, 1234, 1, 18
+## Core Logic
 
-When do I touch this?
-- On change (new info)
-- On reboot
-- That's it
-- Otherwise, it's in memory and you already know (!)
+**State Problem**  
+When the microcontroller loses power, we lose state. We therefore need to persist settings to disk.
 
-Question: 
-- 
+- Settings are *read* from disk on startup
+- Settings are *saved* each time a user changes settings in the web ui
+- Settings are kept in memory and we check against them
 
-read the csv file. for each row: split on ',' into array ....
+We first considered using a simple csv file to commit settings:
 
-We need to save state: 
-- csv or sqlite
+```csv
+zonenumber,pin number, start hours, run seconds
+zone1, 1, , 1234
+zone2, 2, 20200101 00:00:00.0000, 123
+zone3, 3, 20200101 00:00:00.0000, 1234
+```
+
+but this limits our ability to introduce scheduling with one zone coming on and off multiple times per day.
+We therefore switched to a simple json conventions.
+
+Stats:
+
+```json
+{
+  "temp": 55,
+  "humidity": 68,
+  "time": "20200101 10:20:00"
+}
+```
+
+Settings: 
+
+```json
+{
+    "zones": [
+        { "name": "zone1", "pin": "1", "start": "00:01:00", "runSeconds": 3000 }, 
+        { "name": "zone2", "pin": "2", "start": "00:02:00", "runSeconds": 4000 }, 
+        { "name": "zone3", "pin": "3", "start": "00:03:00", "runSeconds": 5000 }
+    ]
+}
+```
+
+### Json to fetch current stats
+
+## Startup Logic Flow
+
+- Read from csv file 
+- Keep info in memory while checking times in a loop ("should I be running now?") 
+
+
+## TODO
+
+- since we need to return zone state (on/off) in the server polling, we might want to have one single
+    json format for both zones & stats 
+- update js to load settings from json 
+- update js to save settings back to server (need to fix the form submission / json constrution via JSON.stringify))
+- fix server logic / endpoints to speak json
 
